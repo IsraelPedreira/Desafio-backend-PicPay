@@ -19,7 +19,7 @@ public class User {
     private String fullName;
 
     @Column(unique = true)
-    private String cpfOrCnpj;
+    private String document;
 
     @Column(unique = true)
     private String email;
