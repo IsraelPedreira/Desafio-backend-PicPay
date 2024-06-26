@@ -6,12 +6,14 @@ import com.desafiopicpay.picpaysimplificado.entities.user.User;
 import com.desafiopicpay.picpaysimplificado.repositories.TransferRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+@Service
 public class TransferService {
 
     @Autowired
@@ -20,14 +22,17 @@ public class TransferService {
     @Autowired
     TransferRepository transferRepository;
 
-    public void createTransfer(TransferDTO transfer) throws Exception {
+    @Autowired
+    ExternalAPIsService externalAPIsService;
 
-        User sender = userService.getUserById(transfer.senderId());
-        User receiver = userService.getUserById(transfer.receiverId());
+    public Transfer createTransfer(TransferDTO transfer) throws Exception {
+
+        User sender = userService.getUserById(transfer.payer());
+        User receiver = userService.getUserById(transfer.payee());
 
         userService.validateTransaction(sender,  transfer.value());
 
-        if(!this.authorizeTransfer()){
+        if(!externalAPIsService.authorizeTransfer()){
             throw new Exception("The operation was not authorized");
         }
 
@@ -40,23 +45,12 @@ public class TransferService {
         sender.setBalance(sender.getBalance().subtract(transfer.value()));
         receiver.setBalance(receiver.getBalance().add(transfer.value()));
 
-        transferRepository.save(createdTransfer);
+        Transfer returnedTransfer = transferRepository.save(createdTransfer);
+
+        externalAPIsService.sendNotification(receiver.getEmail(), "Transfer received from " + sender.getFullName());
+
+        return returnedTransfer;
     }
 
-    private boolean authorizeTransfer(){
-        String url = "https://util.devi.tools/api/v2/authorize";
-        RestTemplate restTemplate= new RestTemplate();
 
-        ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
-
-        if(response.getBody().get("status").equals("success")){
-            Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
-            boolean authorization = (boolean) data.get("authorization");
-            return authorization;
-        }else{
-            return false;
-        }
-
-
-    }
 }

@@ -1,6 +1,7 @@
 package com.desafiopicpay.picpaysimplificado.controllers;
 
 import com.desafiopicpay.picpaysimplificado.dtos.CreateUserDTO;
+import com.desafiopicpay.picpaysimplificado.dtos.ErrorMessageDTO;
 import com.desafiopicpay.picpaysimplificado.entities.user.User;
 import com.desafiopicpay.picpaysimplificado.entities.user.UserType;
 import com.desafiopicpay.picpaysimplificado.services.UserService;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +33,11 @@ public class UserController {
             User createdUser = userService.createUser(userDto);
             return ResponseEntity.ok().body(createdUser);
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ErrorMessageDTO errorMessage = new ErrorMessageDTO(
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage()
+            );
+            return ResponseEntity.badRequest().body(errorMessage);
         }
     }
 
@@ -45,7 +51,11 @@ public class UserController {
         try{
             return ResponseEntity.ok().body(userService.getAllUsers());
         }catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ErrorMessageDTO errorMessage = new ErrorMessageDTO(
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage()
+            );
+            return ResponseEntity.badRequest().body(errorMessage);
         }
     }
 }

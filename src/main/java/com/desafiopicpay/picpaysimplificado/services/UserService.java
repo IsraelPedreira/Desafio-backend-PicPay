@@ -27,7 +27,7 @@ public class UserService {
         }
 
         User createdUser = new User();
-        createdUser.setBalance(new BigDecimal(0));
+        createdUser.setBalance(user.balance());
         createdUser.setEmail(user.email());
         createdUser.setDocument(user.document());
         createdUser.setType(UserType.valueOf(user.type()));
