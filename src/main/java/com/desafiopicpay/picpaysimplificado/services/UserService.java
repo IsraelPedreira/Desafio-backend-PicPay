@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,24 +19,24 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
-    public void createUser(CreateUserDTO user) throws Exception {
+    public User createUser(CreateUserDTO user) throws Exception {
         Optional<User> alreadyExistsUser = userRepository.findUserByDocumentOrEmail(user.document(), user.email());
 
         if(alreadyExistsUser.isPresent()){
             throw new Exception("User already exists");
         }
 
-//        User createdUser = new User(
-//                user.fullName(),
-//                user.document(),
-//                user.email(),
-//                user.password(),
-//                user.password(),
-//                new BigDecimal(0),
-//                user.type()
-//        );
+        User createdUser = new User();
+        createdUser.setBalance(new BigDecimal(0));
+        createdUser.setEmail(user.email());
+        createdUser.setDocument(user.document());
+        createdUser.setType(UserType.valueOf(user.type()));
+        createdUser.setFullName(user.fullName());
+        createdUser.setPassword(user.password());
 
-//        return userRepository.save(createdUser);
+        userRepository.save(createdUser);
+
+        return userRepository.save(createdUser);
     }
 
     public void validateTransaction(User user, BigDecimal amount) throws Exception {
@@ -52,6 +53,10 @@ public class UserService {
         return userRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("User not found"));
     }
 
+    public List<User> getAllUsers(){
+        return userRepository.findAll();
+    }
+
     public BigDecimal updateAmount(BigDecimal newAmount, User user){
         BigDecimal amount = user.getBalance();
         user.setBalance( amount.subtract(newAmount));
@@ -60,6 +65,4 @@ public class UserService {
 
         return amount;
     }
-
-
 }
