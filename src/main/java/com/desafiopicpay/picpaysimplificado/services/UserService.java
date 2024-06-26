@@ -1,10 +1,11 @@
 package com.desafiopicpay.picpaysimplificado.services;
 
 
-import com.desafiopicpay.picpaysimplificado.dtos.CreateUserDto;
+import com.desafiopicpay.picpaysimplificado.dtos.CreateUserDTO;
 import com.desafiopicpay.picpaysimplificado.entities.user.User;
 import com.desafiopicpay.picpaysimplificado.entities.user.UserType;
 import com.desafiopicpay.picpaysimplificado.repositories.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,24 +18,24 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
-    public User createUser(CreateUserDto user) throws Exception {
+    public void createUser(CreateUserDTO user) throws Exception {
         Optional<User> alreadyExistsUser = userRepository.findUserByDocumentOrEmail(user.document(), user.email());
 
         if(alreadyExistsUser.isPresent()){
             throw new Exception("User already exists");
         }
 
-        User createdUser = new User(
-                user.fullName(),
-                user.document(),
-                user.email(),
-                user.password(),
-                user.password(),
-                new BigDecimal(0),
-                user.type()
-        );
+//        User createdUser = new User(
+//                user.fullName(),
+//                user.document(),
+//                user.email(),
+//                user.password(),
+//                user.password(),
+//                new BigDecimal(0),
+//                user.type()
+//        );
 
-        return userRepository.save(createdUser);
+//        return userRepository.save(createdUser);
     }
 
     public void validateTransaction(User user, BigDecimal amount) throws Exception {
@@ -48,7 +49,16 @@ public class UserService {
     }
 
     public User getUserById(String id){
-        return userRepository.getReferenceById(id);
+        return userRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("User not found"));
+    }
+
+    public BigDecimal updateAmount(BigDecimal newAmount, User user){
+        BigDecimal amount = user.getBalance();
+        user.setBalance( amount.subtract(newAmount));
+
+        userRepository.save(user);
+
+        return amount;
     }
 
 
